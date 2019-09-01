@@ -1,5 +1,8 @@
 *.drawio
 *.o
 *.hi
+*.png
 interpreter
 run
+README_log.md
+sandbox.hs

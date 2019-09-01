@@ -78,6 +78,19 @@ stmtAux (";":tks) = do
   (NextStmt s, tks')
 stmtAux tks = (StopStmt, tks)
 
+evalStmt :: Stmt -> SymbTable -> SymbTable
+evalStmt (AssignStmt s a nxt) st = do
+  let val = evalArithExp a st
+  evalStmtAux nxt (insert s val st)
+evalStmt (IfStmt b sTrue sFalse nxt) st = do
+  let pred = evalBoolExp b st
+  let st' = if pred then evalStmt sTrue st else evalStmt sFalse st
+  evalStmtAux nxt st'
+
+evalStmtAux :: StmtAux -> SymbTable -> SymbTable
+evalStmtAux StopStmt st = st
+evalStmtAux (NextStmt s) st = evalStmt s st
+
 --
 
 -- Arithmetic Expression
@@ -158,9 +171,14 @@ boolExp (tk:tks)
   | tk == "true" = (BoolLit BoolTrue, tks)
   | otherwise = (BoolLit BoolFalse, tks)
 
+evalBoolExp :: BoolExp -> SymbTable -> Bool
+evalBoolExp (BoolLit BoolTrue) _ = True
+evalBoolExp (BoolLit BoolFalse) _ = False
+
 --
 
 main :: IO ()
 main = do
   input <- getContents
-  print . stmt . words $ input
+  let prgm = fst . stmt . words $ input
+  print . evalStmt prgm $ fromList []

@@ -2,11 +2,11 @@ import Data.Map
 import Data.Maybe
 import Text.Read
 
-data BoolExp
+newtype BoolExp
   = BoolLit BoolVal
-  | LogicOp BoolVal BoolOp BoolVal
-  | ArithComp ArithExp RelOp ArithExp
-  | ParBoolExp BoolExp
+  -- | LogicOp BoolVal BoolOp BoolVal
+  -- | ArithComp ArithExp RelOp ArithExp
+  -- | ParBoolExp BoolExp
   deriving Show
 
 data BoolVal
@@ -46,61 +46,86 @@ data Factor
   | FactorPar ArithExp
   deriving Show
 
+data Stmt 
+  = AssignStmt String ArithExp StmtAux
+  | IfStmt BoolExp Stmt Stmt StmtAux
+  deriving Show
+
+data StmtAux
+  = NextStmt Stmt
+  | StopStmt
+  deriving Show
+
 type SymbTable = Map String Integer
 
-stmt :: [String] -> SymbTable -> SymbTable
-stmt [] st = st
-stmt (tk1:tk2:tks) st
-  | tk1 == "if" = st
-  | tk1 == "while" = st
-  | otherwise = (\(val, tks) -> stmt tks (insert tk1 (evalArithExp val st) st)) . arithExp tks $ st
+-- Statement
 
-arithExp :: [String] -> SymbTable -> (ArithExp, [String])
-arithExp tks st = do
-  let (t, tks1) = term tks st
-  let (a, tks2) = arithExpAux tks1 st
-  (ArithExp t a, tks2)
+stmt :: [String] -> (Stmt, [String])
+stmt ("if":tks) = do
+  let (b, "then":"{":tks') = boolExp tks
+  let (sTrue, "}":"else":"{":tks) = stmt tks'
+  let (sFalse, "}":tks') = stmt tks
+  let (next, tks) = stmtAux tks'
+  (IfStmt b sTrue sFalse next, tks)
+stmt (var:":=":tks) = do
+  let (a, tks') = arithExp tks
+  let (next, tks) = stmtAux tks'
+  (AssignStmt var a next, tks)
 
-arithExpAux :: [String] -> SymbTable -> (ArithExpAux, [String])
-arithExpAux [] st = (StopArith, [])
-arithExpAux all@(tk1:tks) st
-  | tk1 == "+" = do
-    let (t, tks1) = term tks st
-    let (a, tks2) = arithExpAux tks1 st
-    (ArithPlus t a, tks2)
-  | tk1 == "-" = do
-    let (t, tks1) = term tks st
-    let (a, tks2) = arithExpAux tks1 st
-    (ArithMinus t a, tks2)
-  | otherwise = (StopArith, all)
+stmtAux :: [String] -> (StmtAux, [String])
+stmtAux (";":tks) = do
+  let (s, tks') = stmt tks
+  (NextStmt s, tks')
+stmtAux tks = (StopStmt, tks)
 
-term :: [String] -> SymbTable -> (Term, [String])
-term tks st = do
-  let (f, tks1) = factor tks st
-  let (t, tks2) = termAux tks1 st
-  (Term f t, tks2)
+--
 
-termAux :: [String] -> SymbTable -> (TermAux, [String])
-termAux [] st = (StopTerm, [])
-termAux all@(tk1:tks) st
-  | tk1 == "*" = do
-    let (f, tks1) = factor tks st
-    let (t, tks2) = termAux tks1 st
-    (TermMult f t, tks2)
-  | tk1 == "/" = do
-    let (f, tks1) = factor tks st
-    let (t, tks2) = termAux tks1 st
-    (TermDiv f t, tks2)
-  | otherwise = (StopTerm, all)
+-- Arithmetic Expression
 
-factor :: [String] -> SymbTable -> (Factor, [String])
-factor (tk1:tks) st
-  | tk1 == "(" = do
-    let (a, _:tks1) = arithExp tks st
-    (FactorPar a, tks1)
-  | isNothing maybeNumber = (FactorVar tk1, tks)
-  | otherwise = (FactorInt (read tk1 :: Integer), tks)
-  where maybeNumber = readMaybe tk1 :: Maybe Integer
+arithExp :: [String] -> (ArithExp, [String])
+arithExp tks = do
+  let (t, tks') = term tks
+  let (a, tks) = arithExpAux tks'
+  (ArithExp t a, tks)
+
+arithExpAux :: [String] -> (ArithExpAux, [String])
+arithExpAux [] = (StopArith, [])
+arithExpAux ("+":tks) = do
+    let (t, tks') = term tks
+    let (a, tks) = arithExpAux tks'
+    (ArithPlus t a, tks)
+arithExpAux ("-":tks) = do
+    let (t, tks') = term tks
+    let (a, tks) = arithExpAux tks'
+    (ArithMinus t a, tks)
+arithExpAux tks = (StopArith, tks)
+
+term :: [String] -> (Term, [String])
+term tks = do
+  let (f, tks') = factor tks
+  let (t, tks) = termAux tks'
+  (Term f t, tks)
+
+termAux :: [String] -> (TermAux, [String])
+termAux [] = (StopTerm, [])
+termAux ("*":tks) = do
+    let (f, tks') = factor tks
+    let (t, tks) = termAux tks'
+    (TermMult f t, tks)
+termAux ("/":tks) = do
+    let (f, tks') = factor tks
+    let (t, tks) = termAux tks'
+    (TermDiv f t, tks)
+termAux tks = (StopTerm, tks)
+
+factor :: [String] -> (Factor, [String])
+factor ("(":tks) = do
+    let (a, ")":tks') = arithExp tks
+    (FactorPar a, tks')
+factor (tk:tks)
+  | isNothing maybeNumber = (FactorVar tk, tks)
+  | otherwise = (FactorInt (read tk :: Integer), tks)
+  where maybeNumber = readMaybe tk :: Maybe Integer
 
 evalArithExp :: ArithExp -> SymbTable -> Integer
 evalArithExp (ArithExp t a) st = evalArithExpAux (evalTerm t st) a st
@@ -123,7 +148,19 @@ evalFactor (FactorVar s) st = st ! s
 evalFactor (FactorInt n) _ = n
 evalFactor (FactorPar a) st = evalArithExp a st
 
+--
+
+-- Boolean Expression
+
+boolExp :: [String] -> (BoolExp, [String])
+boolExp [] = (BoolLit BoolFalse, [])
+boolExp (tk:tks)
+  | tk == "true" = (BoolLit BoolTrue, tks)
+  | otherwise = (BoolLit BoolFalse, tks)
+
+--
+
 main :: IO ()
 main = do
   input <- getContents
-  print . stmt (words input) $ fromList []
+  print . stmt . words $ input

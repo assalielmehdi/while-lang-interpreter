@@ -17,9 +17,11 @@ Here is a schema illustrating our interpreter phases:
 ## Grammar
 
 ```
-Statment    ::= var := ArithExp Statment
-              | if BoolExp then { Statment } else { Statment } Statment
-              | while BoolExp do { Statment } Statment
+Statment    ::= var := ArithExp StatmentAux
+              | if BoolExp then { Statment } else { Statment } StatmentAux
+              | while BoolExp do { Statment } StatmentAux
+
+StatmentAux ::= ; Statment
               | epsilon
 
 BoolExp     ::= true

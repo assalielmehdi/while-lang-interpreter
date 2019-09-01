@@ -11,3 +11,40 @@ Our interpreter is composed of mainly 3 programs, and I'm going to call them par
 Here is a schema illustrating our interpreter phases:
 
 ![Interpreter phases](interpreter_phases.png)
+
+## Alphabet
+
+## Grammar
+
+```
+Statment    ::= var := ArithExp Statment
+              | if BoolExp then { Statment } else { Statment } Statment
+              | while BoolExp do { Statment } Statment
+              | epsilon
+
+BoolExp     ::= true
+              | false
+              | BoolExp BoolOp BoolExp
+              | ArithExp RelOp ArithExp
+              | ( BoolExp )
+
+ArithExp    ::= Term ArithExpAux
+
+ArithExpAux ::= + Term ArithExpAux
+              | - Term ArithExpAux
+              | epsilon
+
+Term        ::= Factor TermAux
+
+TermAux     ::= * Factor TermAux
+              | / Factor TermAux
+              | epsilon
+
+Factor      ::= var
+              | int
+              | ( ArithExp )
+
+BoolOp      ::= and | or
+
+RelOp       ::= > | <
+```

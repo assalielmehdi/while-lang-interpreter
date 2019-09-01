@@ -1,1 +1,4 @@
 *.drawio
+*.o
+*.hi
+interpreter

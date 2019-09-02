@@ -2,7 +2,7 @@ import Data.Map
 import Data.Maybe
 import Text.Read
 
--- Grammar definitions
+-- Grammar
 
 data Stmt 
   = AssignStmt String ArithExp StmtAux
@@ -64,11 +64,11 @@ data Factor
   | FactorPar ArithExp
   deriving Show
 
--- Types definitions
+-- Types
 
 type SymbTable = Map String Integer
 
--- Statement definition
+-- Statement functions
 
 stmt :: [String] -> (Stmt, [String])
 stmt ("if":tks) = do
@@ -106,11 +106,62 @@ evalStmtAux :: StmtAux -> SymbTable -> SymbTable
 evalStmtAux StopStmt st = st
 evalStmtAux (NextStmt s) st = evalStmt s st
 
--- Boolean expression
+-- Boolean expression functions
 
+boolExp :: [String] -> (BoolExp, [String])
+boolExp tks = do
+  let (t, tks') = boolTerm tks
+  let (b, tks) = boolExpAux tks'
+  (BoolExp t b, tks)
 
+boolExpAux :: [String] -> (BoolExpAux, [String])
+boolExpAux ("or":tks) = do
+  let (t, tks') = boolTerm tks
+  let (b, tks) = boolExpAux tks'
+  (BoolExpOr t b, tks)
+boolExpAux tks = (StopBoolExp, tks)
 
--- Arithmetic expression
+boolTerm :: [String] -> (BoolTerm, [String])
+boolTerm tks = do
+  let (f, tks') = boolFactor tks
+  let (t, tks) = boolTermAux tks'
+  (BoolTerm f t, tks)
+
+boolTermAux :: [String] -> (BoolTermAux, [String])
+boolTermAux ("and":tks) = do
+  let (f, tks') = boolFactor tks
+  let (t, tks) = boolTermAux tks'
+  (BoolTermAnd f t, tks)
+boolTermAux tks = (StopBoolTerm, tks)
+
+boolFactor :: [String] -> (BoolFactor, [String])
+boolFactor ("true":tks) = (BoolVal True, tks)
+boolFactor ("false":tks) = (BoolVal False, tks)
+boolFactor ("(":tks) = do
+  let (e, ")":tks') = boolExp tks
+  (BoolFactorPar e, tks')
+boolFactor tks = do
+  let (c, tks') = arithComp tks
+  (BoolFactorComp c, tks')
+
+arithComp :: [String] -> (ArithComp, [String])
+arithComp tks = do
+  let (e, tks') = arithExp tks
+  let (a, tks) = arithCompAux tks'
+  (ArithComp e a, tks)
+
+arithCompAux :: [String] -> (ArithCompAux, [String])
+arithCompAux (">":tks) = do
+  let (e, tks') = arithExp tks
+  (ArithCompGT e, tks')
+arithCompAux ("<":tks) = do
+  let (e, tks') = arithExp tks
+  (ArithCompLT e, tks')
+
+evalBoolExp :: BoolExp -> SymbTable -> Bool
+evalBoolExp _ _ = False
+
+-- Arithmetic expression functions
 
 arithExp :: [String] -> (ArithExp, [String])
 arithExp tks = do
@@ -119,7 +170,6 @@ arithExp tks = do
   (ArithExp t a, tks)
 
 arithExpAux :: [String] -> (ArithExpAux, [String])
-arithExpAux [] = (StopArith, [])
 arithExpAux ("+":tks) = do
     let (t, tks') = term tks
     let (a, tks) = arithExpAux tks'
@@ -186,5 +236,3 @@ main = do
   -- let prgm = fst . stmt . words $ input
   -- print . evalStmt prgm $ fromList []
   print . stmt . words $ input
-
---

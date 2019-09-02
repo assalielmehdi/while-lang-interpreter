@@ -1,7 +1,7 @@
 a := 10 ;
 b := 100 ;
 
-if true then
+if ( a < b ) then
     {
         min := a ;
         max := b

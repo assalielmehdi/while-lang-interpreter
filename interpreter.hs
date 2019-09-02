@@ -159,7 +159,30 @@ arithCompAux ("<":tks) = do
   (ArithCompLT e, tks')
 
 evalBoolExp :: BoolExp -> SymbTable -> Bool
-evalBoolExp _ _ = False
+evalBoolExp (BoolExp t e) st = evalBoolExpAux (evalBoolTerm t st) e st
+
+evalBoolExpAux :: Bool -> BoolExpAux -> SymbTable -> Bool
+evalBoolExpAux prev StopBoolExp _ = prev
+evalBoolExpAux prev (BoolExpOr t e) st = evalBoolExpAux (prev || evalBoolTerm t st) e st
+
+evalBoolTerm :: BoolTerm -> SymbTable -> Bool
+evalBoolTerm (BoolTerm f t) st = evalBoolTermAux (evalBoolFactor f st) t st
+
+evalBoolTermAux :: Bool -> BoolTermAux -> SymbTable -> Bool
+evalBoolTermAux prev StopBoolTerm _ = prev
+evalBoolTermAux prev (BoolTermAnd f t) st = evalBoolTermAux (prev && evalBoolFactor f st) t st
+
+evalBoolFactor :: BoolFactor -> SymbTable -> Bool
+evalBoolFactor (BoolVal b) _ = b
+evalBoolFactor (BoolFactorPar e) st = evalBoolExp e st
+evalBoolFactor (BoolFactorComp c) st = evalArithComp c st
+
+evalArithComp :: ArithComp -> SymbTable -> Bool
+evalArithComp (ArithComp e c) st = evalArithCompAux (evalArithExp e st) c st
+
+evalArithCompAux :: Integer -> ArithCompAux -> SymbTable -> Bool
+evalArithCompAux prev (ArithCompGT e) st = prev > evalArithExp e st
+evalArithCompAux prev (ArithCompLT e) st = prev < evalArithExp e st
 
 -- Arithmetic expression functions
 
@@ -233,6 +256,12 @@ evalFactor (FactorPar a) st = evalArithExp a st
 main :: IO ()
 main = do
   input <- getContents
-  -- let prgm = fst . stmt . words $ input
-  -- print . evalStmt prgm $ fromList []
-  print . stmt . words $ input
+  let prgm = fst . stmt . words $ input
+  let st = evalStmt prgm $ fromList []
+  printSymbTable . assocs $ st
+
+printSymbTable :: [(String, Integer)] -> IO ()
+printSymbTable [] = putStr ""
+printSymbTable ((var, val):rem) = do
+  putStrLn (var ++ " " ++ show val)
+  printSymbTable rem

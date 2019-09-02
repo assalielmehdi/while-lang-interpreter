@@ -7,7 +7,9 @@ For simplicity, all terminals will be separated by blanks to avoid problems whil
 Below is the description of grammar that we will use.
 
 Arithmetic operators precedence: (\*, /) >> (+, -)
+
 Logical operators precedence: (and) >> (or)
+
 Comparison operators precedence: (>, <)
 
 ```

@@ -101,10 +101,22 @@ evalStmt (IfStmt b sTrue sFalse nxt) st = do
   let pred = evalBoolExp b st
   let st' = if pred then evalStmt sTrue st else evalStmt sFalse st
   evalStmtAux nxt st'
+evalStmt (WhileStmt b s nxt) st = do
+  let st' = evalWhileStmt b s st
+  evalStmtAux nxt st'
 
 evalStmtAux :: StmtAux -> SymbTable -> SymbTable
 evalStmtAux StopStmt st = st
 evalStmtAux (NextStmt s) st = evalStmt s st
+
+evalWhileStmt :: BoolExp -> Stmt -> SymbTable -> SymbTable
+evalWhileStmt b s st = do
+  let pred = evalBoolExp b st
+  if not pred then
+    st
+  else do
+    let st' = evalStmt s st
+    evalWhileStmt b s st'
 
 -- Boolean expression functions
 

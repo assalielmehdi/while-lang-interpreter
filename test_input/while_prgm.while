@@ -3,7 +3,7 @@ val := 10000 ;
 cur := val ;
 mod := 1000000007 ;
 
-while ( cur > 1 )
+while true
   do
    {
       fact := fact * cur ;

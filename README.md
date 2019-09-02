@@ -7,24 +7,38 @@ For simplicity, all terminals will be separated by blanks to avoid problems whil
 Below is the description of grammar that we will use.
 
 ```
-Statment    ::= var := ArithExp StatmentAux
-              | if BoolExp then { Statment } else { Statment } StatmentAux
-              | while BoolExp do { Statment } StatmentAux
+Statment      ::= var := ArithExp StatmentAux
+                | if BoolExp then { Statment } else { Statment } StatmentAux
+                | while BoolExp do { Statment } StatmentAux
 
-StatmentAux ::= ; Statment
-              | epsilon
+StatmentAux   ::= ; Statment
+                | epsilon
 
-BoolExp     ::= true
-              | false
-              | BoolExp BoolOp BoolExp
-              | ArithExp RelOp ArithExp
-              | ( BoolExp )
+BoolExp       ::= BoolTerm BoolExpAux
 
-ArithExp    ::= Term ArithExpAux
+BoolExpAux    ::= or BoolExpAux
+                | epsilon
 
-ArithExpAux ::= + Term ArithExpAux
-              | - Term ArithExpAux
-              | epsilon
+BoolTerm      ::= BoolFactor BoolTermAux
+
+BoolTermAux   ::= and BoolFactor BoolTermAux
+                | epsilon
+
+BoolFactor    ::= true
+                | false
+                | ( BoolExp )
+                | ArithComp
+
+ArithComp     ::= ArithExp ArithCompAux
+
+ArithCompAux  ::= > ArithExp
+                | < ArithExp
+
+ArithExp      ::= Term ArithExpAux
+
+ArithExpAux   ::= + Term ArithExpAux
+                | - Term ArithExpAux
+                | epsilon
 
 Term        ::= Factor TermAux
 
@@ -35,8 +49,4 @@ TermAux     ::= * Factor TermAux
 Factor      ::= var
               | int
               | ( ArithExp )
-
-BoolOp      ::= and | or
-
-RelOp       ::= > | <
 ```

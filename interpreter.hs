@@ -49,6 +49,7 @@ data Factor
 data Stmt 
   = AssignStmt String ArithExp StmtAux
   | IfStmt BoolExp Stmt Stmt StmtAux
+  | WhileStmt BoolExp Stmt StmtAux
   deriving Show
 
 data StmtAux
@@ -67,6 +68,11 @@ stmt ("if":tks) = do
   let (sFalse, "}":tks') = stmt tks
   let (next, tks) = stmtAux tks'
   (IfStmt b sTrue sFalse next, tks)
+stmt ("while":tks) = do
+  let (b, "do":"{":tks') = boolExp tks
+  let (s, "}":tks) = stmt tks'
+  let (next, tks') = stmtAux tks
+  (WhileStmt b s next, tks')
 stmt (var:":=":tks) = do
   let (a, tks') = arithExp tks
   let (next, tks) = stmtAux tks'
@@ -180,5 +186,6 @@ evalBoolExp (BoolLit BoolFalse) _ = False
 main :: IO ()
 main = do
   input <- getContents
-  let prgm = fst . stmt . words $ input
-  print . evalStmt prgm $ fromList []
+  -- let prgm = fst . stmt . words $ input
+  -- print . evalStmt prgm $ fromList []
+  print . stmt . words $ input

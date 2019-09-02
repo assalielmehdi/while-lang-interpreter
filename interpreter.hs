@@ -2,26 +2,44 @@ import Data.Map
 import Data.Maybe
 import Text.Read
 
-newtype BoolExp
-  = BoolLit BoolVal
-  -- | LogicOp BoolVal BoolOp BoolVal
-  -- | ArithComp ArithExp RelOp ArithExp
-  -- | ParBoolExp BoolExp
+-- Grammar definitions
+
+data Stmt 
+  = AssignStmt String ArithExp StmtAux
+  | IfStmt BoolExp Stmt Stmt StmtAux
+  | WhileStmt BoolExp Stmt StmtAux
   deriving Show
 
-data BoolVal
-  = BoolTrue
-  | BoolFalse
+data StmtAux
+  = NextStmt Stmt
+  | StopStmt
   deriving Show
 
-data BoolOp
-  = BoolAnd
-  | BoolOr
+data BoolExp = BoolExp BoolTerm BoolExpAux deriving Show
+
+data BoolExpAux
+  = BoolExpOr BoolTerm BoolExpAux
+  | StopBoolExp
   deriving Show
 
-data RelOp
-  = RelGT
-  | RelLT
+data BoolTerm = BoolTerm BoolFactor BoolTermAux deriving Show
+
+data BoolTermAux
+  = BoolTermAnd BoolFactor BoolTermAux
+  | StopBoolTerm
+  deriving Show
+
+data BoolFactor
+  = BoolVal Bool
+  | BoolFactorPar BoolExp
+  | BoolFactorComp ArithComp
+  deriving Show
+
+data ArithComp = ArithComp ArithExp ArithCompAux deriving Show
+
+data ArithCompAux
+  = ArithCompGT ArithExp
+  | ArithCompLT ArithExp
   deriving Show
 
 data ArithExp = ArithExp Term ArithExpAux deriving Show
@@ -46,20 +64,11 @@ data Factor
   | FactorPar ArithExp
   deriving Show
 
-data Stmt 
-  = AssignStmt String ArithExp StmtAux
-  | IfStmt BoolExp Stmt Stmt StmtAux
-  | WhileStmt BoolExp Stmt StmtAux
-  deriving Show
-
-data StmtAux
-  = NextStmt Stmt
-  | StopStmt
-  deriving Show
+-- Types definitions
 
 type SymbTable = Map String Integer
 
--- Statement
+-- Statement definition
 
 stmt :: [String] -> (Stmt, [String])
 stmt ("if":tks) = do
@@ -97,9 +106,11 @@ evalStmtAux :: StmtAux -> SymbTable -> SymbTable
 evalStmtAux StopStmt st = st
 evalStmtAux (NextStmt s) st = evalStmt s st
 
---
+-- Boolean expression
 
--- Arithmetic Expression
+
+
+-- Arithmetic expression
 
 arithExp :: [String] -> (ArithExp, [String])
 arithExp tks = do
@@ -167,21 +178,7 @@ evalFactor (FactorVar s) st = st ! s
 evalFactor (FactorInt n) _ = n
 evalFactor (FactorPar a) st = evalArithExp a st
 
---
-
--- Boolean Expression
-
-boolExp :: [String] -> (BoolExp, [String])
-boolExp [] = (BoolLit BoolFalse, [])
-boolExp (tk:tks)
-  | tk == "true" = (BoolLit BoolTrue, tks)
-  | otherwise = (BoolLit BoolFalse, tks)
-
-evalBoolExp :: BoolExp -> SymbTable -> Bool
-evalBoolExp (BoolLit BoolTrue) _ = True
-evalBoolExp (BoolLit BoolFalse) _ = False
-
---
+-- Main
 
 main :: IO ()
 main = do
@@ -189,3 +186,5 @@ main = do
   -- let prgm = fst . stmt . words $ input
   -- print . evalStmt prgm $ fromList []
   print . stmt . words $ input
+
+--

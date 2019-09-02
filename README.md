@@ -16,7 +16,7 @@ StatmentAux   ::= ; Statment
 
 BoolExp       ::= BoolTerm BoolExpAux
 
-BoolExpAux    ::= or BoolExpAux
+BoolExpAux    ::= or BoolTerm BoolExpAux
                 | epsilon
 
 BoolTerm      ::= BoolFactor BoolTermAux
@@ -40,13 +40,13 @@ ArithExpAux   ::= + Term ArithExpAux
                 | - Term ArithExpAux
                 | epsilon
 
-Term        ::= Factor TermAux
+Term          ::= Factor TermAux
 
-TermAux     ::= * Factor TermAux
-              | / Factor TermAux
-              | epsilon
+TermAux       ::= * Factor TermAux
+                | / Factor TermAux
+                | epsilon
 
-Factor      ::= var
-              | int
-              | ( ArithExp )
+Factor        ::= var
+                | int
+                | ( ArithExp )
 ```

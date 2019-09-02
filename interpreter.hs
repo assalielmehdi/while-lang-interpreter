@@ -171,13 +171,13 @@ arithExp tks = do
 
 arithExpAux :: [String] -> (ArithExpAux, [String])
 arithExpAux ("+":tks) = do
-    let (t, tks') = term tks
-    let (a, tks) = arithExpAux tks'
-    (ArithPlus t a, tks)
+  let (t, tks') = term tks
+  let (a, tks) = arithExpAux tks'
+  (ArithPlus t a, tks)
 arithExpAux ("-":tks) = do
-    let (t, tks') = term tks
-    let (a, tks) = arithExpAux tks'
-    (ArithMinus t a, tks)
+  let (t, tks') = term tks
+  let (a, tks) = arithExpAux tks'
+  (ArithMinus t a, tks)
 arithExpAux tks = (StopArith, tks)
 
 term :: [String] -> (Term, [String])
@@ -189,19 +189,19 @@ term tks = do
 termAux :: [String] -> (TermAux, [String])
 termAux [] = (StopTerm, [])
 termAux ("*":tks) = do
-    let (f, tks') = factor tks
-    let (t, tks) = termAux tks'
-    (TermMult f t, tks)
+  let (f, tks') = factor tks
+  let (t, tks) = termAux tks'
+  (TermMult f t, tks)
 termAux ("/":tks) = do
-    let (f, tks') = factor tks
-    let (t, tks) = termAux tks'
-    (TermDiv f t, tks)
+  let (f, tks') = factor tks
+  let (t, tks) = termAux tks'
+  (TermDiv f t, tks)
 termAux tks = (StopTerm, tks)
 
 factor :: [String] -> (Factor, [String])
 factor ("(":tks) = do
-    let (a, ")":tks') = arithExp tks
-    (FactorPar a, tks')
+  let (a, ")":tks') = arithExp tks
+  (FactorPar a, tks')
 factor (tk:tks)
   | isNothing maybeNumber = (FactorVar tk, tks)
   | otherwise = (FactorInt (read tk :: Integer), tks)

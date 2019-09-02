@@ -1,10 +1,14 @@
-# Small interpreter with **Haskell**
+# Small interpreter in **Haskell**
 
-The main objective of this mini project is to make our hands dirty with the **Haskell** programming language and to make use of some functional programming features to build a very simple interpreter for the **While** language.
+The main objective of this mini project is to make our hands dirty with the **Haskell** programming language and to make use of some functional programming features to build a very simple interpreter for the **While** language. (Problem [link](https://www.hackerrank.com/challenges/while-language-fp/problem))
 
 For simplicity, all terminals will be separated by blanks to avoid problems while lexing.
 
 Below is the description of grammar that we will use.
+
+Arithmetic operators precedence: (\*, /) >> (+, -)
+Logical operators precedence: (and) >> (or)
+Comparison operators precedence: (>, <)
 
 ```
 Statment      ::= var := ArithExp StatmentAux
